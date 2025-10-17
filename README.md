@@ -12,6 +12,23 @@ Este projeto é uma ferramenta de linha de comando desenvolvida em Python para r
     * Análise de disciplina (jogadores com mais cartões amarelos e vermelhos).
 * **Visualização de Dados:** Gera gráficos de barras para cada análise, facilitando a interpretação dos resultados.
 
+---
+
+## 🖼️ Demonstração
+
+Abaixo estão alguns exemplos dos gráficos gerados pela ferramenta de análise.
+
+### Top 5 Finalizadores
+<img src="assets/Top 5 Finalizadores.png" alt="Gráfico Top 5 Finalizadores" width="700"/>
+
+### Top 5 Garçons (Assistências)
+<img src="assets/Top 5 Garçons.png" alt="Gráfico Top 5 Garçons" width="700"/>
+
+### Análise de Disciplina
+<img src="assets/Jogadores com Mais Cartões.png" alt="Gráfico Jogadores com Mais Cartões" width="700"/>
+
+---
+
 ## 🛠️ Tecnologias Utilizadas
 
 * **Python 3**
@@ -21,19 +38,20 @@ Este projeto é uma ferramenta de linha de comando desenvolvida em Python para r
 * **Matplotlib & Seaborn:** Para a criação dos gráficos.
 * **WebDriver Manager:** Para gerenciar o driver do Chrome automaticamente.
 
+---
+
 ## 🚀 Como Executar o Projeto
 
 Siga os passos abaixo para rodar o projeto na sua máquina.
 
 1.  **Clone o repositório:**
     ```bash
-    git clone [https://github.com/SEU_USUARIO/projeto-analise-spfc.git](https://github.com/SEU_USUARIO/projeto-analise-spfc.git)
+    git clone [https://github.com/Daviramos7/Projeto-SPFC.git](https://github.com/Daviramos7/Projeto-SPFC.git)
     ```
-    *(Lembre-se de substituir `SEU_USUARIO` pelo seu nome de usuário no GitHub)*
 
 2.  **Navegue até a pasta do projeto:**
     ```bash
-    cd projeto-analise-spfc
+    cd Projeto-SPFC
     ```
 
 3.  **Instale as dependências necessárias:**
@@ -53,6 +71,8 @@ Siga os passos abaixo para rodar o projeto na sua máquina.
     python menu.py
     ```
 
+---
+
 ## 📂 Estrutura dos Arquivos
 
 * `raspagem_spfc.py`: Script responsável pela coleta dos dados do site FBref.
@@ -60,3 +80,4 @@ Siga os passos abaixo para rodar o projeto na sua máquina.
 * `analises.py`: Módulo que contém todas as funções de análise e geração de gráficos.
 * `menu.py`: Script principal que apresenta a interface de menu para o usuário.
 * `.gitignore`: Arquivo que instrui o Git a ignorar arquivos desnecessários (como o cache do Python).
+* `/assets`: Pasta que armazena as imagens de demonstração dos gráficos.
