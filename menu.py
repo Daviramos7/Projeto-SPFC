@@ -1,40 +1,45 @@
 import pandas as pd
 import analises 
+import os
 
 def main():
-    """Função principal que carrega os dados e mostra o menu."""
+    arquivo = 'dados_spfc_processados.csv'
+    
+    if not os.path.exists(arquivo):
+        print(f"ERRO: O arquivo '{arquivo}' não foi encontrado.")
+        print("Passo 1: Rode o script 'raspagem_spfc.py' para baixar ou gerar os dados.")
+        return
+
     try:
-        df = pd.read_csv('dados_spfc.csv')
+        df = pd.read_csv(arquivo)
         print("="*50)
-        print(">>> Ferramenta de Análise de Desempenho do São Paulo FC <<<")
+        print(">>> Ferramenta de Análise SPFC (2026) <<<")
         print("="*50)
-        print("Dados carregados com sucesso!\n")
-    except FileNotFoundError:
-        print("ERRO: Arquivo 'dados_spfc.csv' não encontrado. Rode o script de raspagem primeiro.")
+        print(f"Dados carregados: {len(df)} jogadores.")
+    except Exception as e:
+        print(f"Erro ao abrir CSV: {e}")
         return
 
     while True:
         print("\nEscolha uma opção de análise:")
-        print("1 - Top 5 Finalizadores (Gols por 90 min)")
-        print("2 - Top 5 Garçons (Assistências por 90 min)")
-        print("3 - Análise de Disciplina (Jogadores com mais cartões)")
+        print("1 - Top 5 Finalizadores (Gols/90min)")
+        print("2 - Top 5 Garçons (Assistências/90min)")
+        print("3 - Disciplina (Cartões)")
         print("0 - Sair")
         
-        escolha = input("Digite o número da sua escolha: ")
+        escolha = input("Opção: ")
 
         if escolha == '1':
-            # Chama a função que está no arquivo 'analises.py'
             analises.analisar_finalizadores(df)
         elif escolha == '2':
             analises.analisar_garcons(df)
         elif escolha == '3':
             analises.analisar_disciplina(df)
         elif escolha == '0':
-            print("\nObrigado por usar a ferramenta. Até mais!")
+            print("Saindo...")
             break
         else:
-            print("\nOpção inválida! Por favor, escolha um número do menu.")
+            print("Opção inválida.")
 
-# Executa a função principal quando o script é rodado
 if __name__ == "__main__":
     main()
