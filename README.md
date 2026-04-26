@@ -1,83 +1,130 @@
-# 📊 Análise de Desempenho - São Paulo FC
+# ⚽ Análise de Desempenho — São Paulo FC
 
-Este projeto é uma ferramenta de linha de comando desenvolvida em Python para realizar a coleta (web scraping) e a análise interativa de dados de desempenho dos jogadores do São Paulo FC. Os dados são extraídos em tempo real do site [FBref](https://fbref.com/) e apresentados através de rankings no terminal e gráficos.
+> Pipeline de web scraping + ferramenta de análise interativa de estatísticas dos jogadores do São Paulo FC, extraídas em tempo real do [FBref](https://fbref.com/).
 
-## ✨ Funcionalidades
+---
 
-* **Coleta de Dados Automatizada:** Utiliza Selenium para navegar e extrair tabelas de estatísticas, simulando um usuário real para contornar proteções.
-* **Menu Interativo:** Permite ao usuário escolher entre diferentes tipos de análise sem precisar alterar o código.
-* **Análises Disponíveis:**
-    * Ranking dos artilheiros mais eficientes (Gols por 90 minutos).
-    * Ranking dos melhores "garçons" (Assistências por 90 minutos).
-    * Análise de disciplina (jogadores com mais cartões amarelos e vermelhos).
-* **Visualização de Dados:** Gera gráficos de barras para cada análise, facilitando a interpretação dos resultados.
+## ⚡ Performance
+
+| Métrica | Resultado |
+|---|---|
+| Registros processados | **24 jogadores** |
+| Tempo de execução | **10,39 segundos** |
+| Tempo manual estimado | **480 segundos** |
+| Aceleração | **46,2x mais rápido** |
+
+---
+
+## 🛠️ Stack
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)
+![Selenium](https://img.shields.io/badge/Selenium-43B02A?style=for-the-badge&logo=selenium&logoColor=white)
+![Matplotlib](https://img.shields.io/badge/Matplotlib-11557C?style=for-the-badge)
+![Seaborn](https://img.shields.io/badge/Seaborn-3776AB?style=for-the-badge)
+
+---
+
+## 📋 Sobre o Projeto
+
+Ferramenta de linha de comando para coleta e análise de estatísticas de jogadores do SPFC. O scraper usa Selenium para simular navegação real, contornando proteções anti-bot do FBref. Os dados são processados com Pandas e exibidos via menu interativo com gráficos gerados por Matplotlib/Seaborn.
+
+**Detalhe de engenharia:** o pipeline possui modo de contingência automático — se o site bloquear a extração, o sistema gera dados sintéticos com a mesma estrutura e tipos, mantendo o pipeline funcional sem intervenção manual.
+
+---
+
+## ✨ Análises Disponíveis
+
+- **Top 5 Finalizadores** — ranking por Gols a cada 90 minutos
+- **Top 5 Garçons** — ranking por Assistências a cada 90 minutos
+- **Disciplina** — jogadores com mais cartões amarelos e vermelhos
 
 ---
 
 ## 🖼️ Demonstração
 
-Abaixo estão alguns exemplos dos gráficos gerados pela ferramenta de análise.
-
 ### Top 5 Finalizadores
-<img src="assets/Top 5 Finalizadores.png" alt="Gráfico Top 5 Finalizadores" width="700"/>
+<img src="assets/Top 5 Finalizadores.png" alt="Top 5 Finalizadores" width="700"/>
 
-### Top 5 Garçons (Assistências)
-<img src="assets/Top 5 Garçons.png" alt="Gráfico Top 5 Garçons" width="700"/>
+### Top 5 Garçons
+<img src="assets/Top 5 Garçons.png" alt="Top 5 Garçons" width="700"/>
 
-### Análise de Disciplina
-<img src="assets/Jogadores com Mais Cartões.png" alt="Gráfico Jogadores com Mais Cartões" width="700"/>
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-* **Python 3**
-* **Pandas:** Para manipulação e limpeza dos dados.
-* **Selenium:** Para automação do navegador e web scraping.
-* **BeautifulSoup4:** Para o parsing do conteúdo HTML.
-* **Matplotlib & Seaborn:** Para a criação dos gráficos.
-* **WebDriver Manager:** Para gerenciar o driver do Chrome automaticamente.
+### Disciplina
+<img src="assets/Jogadores com Mais Cartões.png" alt="Jogadores com Mais Cartões" width="700"/>
 
 ---
 
-## 🚀 Como Executar o Projeto
+## 🏗️ Arquitetura
 
-Siga os passos abaixo para rodar o projeto na sua máquina.
-
-1.  **Clone o repositório:**
-    ```bash
-    git clone [https://github.com/Daviramos7/Projeto-SPFC.git](https://github.com/Daviramos7/Projeto-SPFC.git)
-    ```
-
-2.  **Navegue até a pasta do projeto:**
-    ```bash
-    cd Projeto-SPFC
-    ```
-
-3.  **Instale as dependências necessárias:**
-    ```bash
-    pip install pandas selenium beautifulsoup4 matplotlib seaborn webdriver-manager
-    ```
-
-4.  **Execute o script de coleta de dados:**
-    Este passo é necessário para criar o arquivo `dados_spfc.csv` com as estatísticas mais recentes.
-    ```bash
-    python raspagem_spfc.py
-    ```
-
-5.  **Execute o programa principal:**
-    Agora, rode o menu interativo para começar as análises.
-    ```bash
-    python menu.py
-    ```
+```
+FBref (fbref.com)
+       │
+       ▼
+  Selenium (anti-bot bypass)
+  ChromeOptions + ExecuteScript
+       │
+       ├─── Extração OK ──────────────────────┐
+       │                                      │
+       └─── Bloqueio detectado                │
+                │                             │
+                ▼                             ▼
+         Modo Contingência          pd.read_html(outerHTML)
+         (dados sintéticos          MultiIndex → flatten
+          estruturalmente           Renomeação de colunas
+          corretos)                 Conversão numérica
+                │                             │
+                └──────────────┬──────────────┘
+                               ▼
+                    dados_spfc_processados.csv
+                               │
+                               ▼
+                    menu.py (CLI interativo)
+                               │
+                    ┌──────────┼──────────┐
+                    ▼          ▼          ▼
+               Gols/90    Ast/90     Cartões
+               barplot    barplot    barplot
+```
 
 ---
 
-## 📂 Estrutura dos Arquivos
+## 🚀 Como Executar
 
-* `raspagem_spfc.py`: Script responsável pela coleta dos dados do site FBref.
-* `dados_spfc.csv`: Arquivo gerado pela raspagem, que serve como base de dados local para as análises.
-* `analises.py`: Módulo que contém todas as funções de análise e geração de gráficos.
-* `menu.py`: Script principal que apresenta a interface de menu para o usuário.
-* `.gitignore`: Arquivo que instrui o Git a ignorar arquivos desnecessários (como o cache do Python).
-* `/assets`: Pasta que armazena as imagens de demonstração dos gráficos.
+```bash
+# Clone o repositório
+git clone https://github.com/Daviramos7/Projeto-SPFC.git
+cd Projeto-SPFC
+
+# Instale as dependências
+pip install pandas selenium matplotlib seaborn webdriver-manager
+
+# Passo 1: Coleta dos dados
+python raspagem_spfc.py
+
+# Passo 2: Menu de análise
+python menu.py
+```
+
+---
+
+## 📂 Estrutura
+
+```
+Projeto-SPFC/
+│
+├── raspagem_spfc.py              # Pipeline de scraping + contingência
+├── analises.py                   # Funções de análise e gráficos
+├── menu.py                       # Interface CLI
+├── dados_spfc_processados.csv    # Dataset gerado pelo scraper
+└── assets/                       # Imagens de demonstração
+```
+
+---
+
+## 📄 Licença
+
+Copyright © 2026 por Davi Ramos Ferreira. Todos os Direitos Reservados.
+
+---
+
+**Desenvolvido com 💙 por [Davi Ramos Ferreira](https://github.com/Daviramos7)**
