@@ -1,130 +1,103 @@
-# ⚽ Análise de Desempenho — São Paulo FC
+# Automação de estatísticas do São Paulo FC
 
-> Pipeline de web scraping + ferramenta de análise interativa de estatísticas dos jogadores do São Paulo FC, extraídas em tempo real do [FBref](https://fbref.com/).
+Automação em Python que coleta estatísticas públicas do São Paulo FC no FBref, normaliza os dados e gera um CSV pronto para análise.
 
----
+## O que o projeto faz
 
-## ⚡ Performance
+1. Abre a página pública do clube com Selenium.
+2. Localiza e processa a tabela de jogadores.
+3. Remove totais, cabeçalhos repetidos e registros inválidos.
+4. Salva o resultado de forma segura em `output/dados_spfc_processados.csv`.
+5. Mostra origem, registros processados, arquivo e tempo total.
+6. Abre o CSV no aplicativo padrão do Windows após uma execução bem-sucedida.
 
-| Métrica | Resultado |
-|---|---|
-| Registros processados | **24 jogadores** |
-| Tempo de execução | **10,39 segundos** |
-| Tempo manual estimado | **480 segundos** |
-| Aceleração | **46,2x mais rápido** |
+Uma falha na coleta não sobrescreve nem abre um resultado antigo. Dados sintéticos só são produzidos quando o modo de demonstração é solicitado explicitamente.
 
----
+## Instalação
 
-## 🛠️ Stack
-
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)
-![Selenium](https://img.shields.io/badge/Selenium-43B02A?style=for-the-badge&logo=selenium&logoColor=white)
-![Matplotlib](https://img.shields.io/badge/Matplotlib-11557C?style=for-the-badge)
-![Seaborn](https://img.shields.io/badge/Seaborn-3776AB?style=for-the-badge)
-
----
-
-## 📋 Sobre o Projeto
-
-Ferramenta de linha de comando para coleta e análise de estatísticas de jogadores do SPFC. O scraper usa Selenium para simular navegação real, contornando proteções anti-bot do FBref. Os dados são processados com Pandas e exibidos via menu interativo com gráficos gerados por Matplotlib/Seaborn.
-
-**Detalhe de engenharia:** o pipeline possui modo de contingência automático — se o site bloquear a extração, o sistema gera dados sintéticos com a mesma estrutura e tipos, mantendo o pipeline funcional sem intervenção manual.
-
----
-
-## ✨ Análises Disponíveis
-
-- **Top 5 Finalizadores** — ranking por Gols a cada 90 minutos
-- **Top 5 Garçons** — ranking por Assistências a cada 90 minutos
-- **Disciplina** — jogadores com mais cartões amarelos e vermelhos
-
----
-
-## 🖼️ Demonstração
-
-### Top 5 Finalizadores
-<img src="assets/Top 5 Finalizadores.png" alt="Top 5 Finalizadores" width="700"/>
-
-### Top 5 Garçons
-<img src="assets/Top 5 Garçons.png" alt="Top 5 Garçons" width="700"/>
-
-### Disciplina
-<img src="assets/Jogadores com Mais Cartões.png" alt="Jogadores com Mais Cartões" width="700"/>
-
----
-
-## 🏗️ Arquitetura
-
-```
-FBref (fbref.com)
-       │
-       ▼
-  Selenium (anti-bot bypass)
-  ChromeOptions + ExecuteScript
-       │
-       ├─── Extração OK ──────────────────────┐
-       │                                      │
-       └─── Bloqueio detectado                │
-                │                             │
-                ▼                             ▼
-         Modo Contingência          pd.read_html(outerHTML)
-         (dados sintéticos          MultiIndex → flatten
-          estruturalmente           Renomeação de colunas
-          corretos)                 Conversão numérica
-                │                             │
-                └──────────────┬──────────────┘
-                               ▼
-                    dados_spfc_processados.csv
-                               │
-                               ▼
-                    menu.py (CLI interativo)
-                               │
-                    ┌──────────┼──────────┐
-                    ▼          ▼          ▼
-               Gols/90    Ast/90     Cartões
-               barplot    barplot    barplot
-```
-
----
-
-## 🚀 Como Executar
+É necessário ter Python 3.11 ou superior e Google Chrome instalados.
 
 ```bash
-# Clone o repositório
-git clone https://github.com/Daviramos7/Projeto-SPFC.git
-cd Projeto-SPFC
+python -m pip install -r requirements.txt
+```
 
-# Instale as dependências
-pip install pandas selenium matplotlib seaborn webdriver-manager
+## Execução
 
-# Passo 1: Coleta dos dados
+Execução normal, com abertura automática do resultado:
+
+```bash
+python main.py
+```
+
+Execução sem abertura automática:
+
+```bash
+python main.py --no-open
+```
+
+Modo de demonstração com dados sintéticos claramente identificados:
+
+```bash
+python main.py --demo
+```
+
+Para diagnóstico detalhado durante o desenvolvimento:
+
+```bash
+python main.py --debug
+```
+
+O comando antigo continua disponível por compatibilidade:
+
+```bash
 python raspagem_spfc.py
+```
 
-# Passo 2: Menu de análise
+## Resultado
+
+A coleta real gera ou substitui:
+
+```text
+output/dados_spfc_processados.csv
+```
+
+No Windows, o arquivo só é aberto no aplicativo padrão depois de ser gravado e validado com sucesso. O modo `--demo` usa um arquivo separado, `output/dados_spfc_demo.csv`, para não confundir dados sintéticos com a coleta real.
+
+## Menu de análises
+
+```bash
 python menu.py
 ```
 
----
+O menu lê o CSV real e oferece análises de finalização, assistências e disciplina. Os gráficos são abertos apenas quando uma opção é escolhida.
 
-## 📂 Estrutura
+## Testes
 
-```
-Projeto-SPFC/
-│
-├── raspagem_spfc.py              # Pipeline de scraping + contingência
-├── analises.py                   # Funções de análise e gráficos
-├── menu.py                       # Interface CLI
-├── dados_spfc_processados.csv    # Dataset gerado pelo scraper
-└── assets/                       # Imagens de demonstração
+Os testes não acessam a internet nem abrem navegador ou gráficos:
+
+```bash
+python -m unittest discover -s tests -v
 ```
 
----
+## Estrutura
 
-## 📄 Licença
+```text
+main.py                entrada principal e interface de terminal
+pipeline.py            coleta, normalização e gravação do resultado
+raspagem_spfc.py       compatibilidade com o comando antigo
+analises.py            cálculos e gráficos
+menu.py                menu interativo
+output/                resultados gerados
+tests/                 testes automatizados
+requirements.txt       dependências validadas
+```
 
-Copyright © 2026 por Davi Ramos Ferreira. Todos os Direitos Reservados.
+## Desempenho observado
 
----
+Na validação mais recente, a coleta real processou 46 registros em **10,63 segundos**. A referência manual histórica do projeto é de aproximadamente **480 segundos**.
 
-**Desenvolvido com 💙 por [Davi Ramos Ferreira](https://github.com/Daviramos7)**
+O tempo pode variar conforme a conexão, a resposta do site e o navegador.
+
+## Licença
+
+Copyright © 2026 Davi Ramos Ferreira. Todos os direitos reservados.

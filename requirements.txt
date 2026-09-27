@@ -1,0 +1,7 @@
+pandas==2.3.3
+numpy==2.4.2
+selenium==4.40.0
+webdriver-manager==4.0.2
+matplotlib==3.10.8
+seaborn==0.13.2
+lxml==6.0.2

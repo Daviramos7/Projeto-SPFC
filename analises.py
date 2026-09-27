@@ -1,101 +1,206 @@
+"""Cálculos e visualizações das estatísticas do elenco."""
+
+from collections.abc import Iterable
+
 import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
+import seaborn as sns
 
-def analisar_finalizadores(df):
+
+def _validar_colunas(df: pd.DataFrame, colunas: Iterable[str]) -> bool:
+    """Informa as colunas ausentes e indica se o DataFrame pode ser analisado."""
+    ausentes = [coluna for coluna in colunas if coluna not in df.columns]
+    if not ausentes:
+        return True
+
+    print(f"Erro: colunas obrigatórias ausentes: {', '.join(ausentes)}.")
+    return False
+
+
+def _normalizar_numeros(df: pd.DataFrame, colunas: Iterable[str]) -> pd.DataFrame:
+    """Copia o DataFrame e converte as colunas numéricas sem alterar a entrada."""
+    resultado = df.copy()
+    for coluna in colunas:
+        resultado[coluna] = pd.to_numeric(resultado[coluna], errors="coerce")
+    return resultado
+
+
+def _imprimir_tabela(df: pd.DataFrame, colunas: list[str]) -> None:
+    """Imprime uma tabela compacta, sem o índice interno do pandas."""
+    print(
+        df.loc[:, colunas].to_string(
+            index=False,
+            float_format=lambda valor: f"{valor:.2f}",
+        )
+    )
+
+
+def analisar_finalizadores(
+    df: pd.DataFrame, mostrar_grafico: bool = True
+) -> pd.DataFrame:
+    """Retorna os cinco maiores índices de gols por 90 minutos."""
     print("\n--- Análise: Top 5 Finalizadores Mais Eficientes ---")
-    
-    if 'Minutos' not in df.columns or 'Gols' not in df.columns:
-        print("Erro: Colunas 'Minutos' ou 'Gols' não encontradas no CSV.")
-        return
 
-    df_analise = df[df['Minutos'] > 0].copy()
-    
+    colunas_obrigatorias = ["Jogador", "Minutos", "Gols"]
+    if not _validar_colunas(df, colunas_obrigatorias):
+        return pd.DataFrame()
+
+    df_analise = _normalizar_numeros(df, ["Minutos", "Gols"])
+    df_analise = df_analise[df_analise["Minutos"] > 0].copy()
+
     if df_analise.empty:
-        print("Aviso: Nenhum jogador com minutos jogados encontrado.")
-        return
+        print("Aviso: nenhum jogador com minutos jogados encontrado.")
+        return df_analise
 
-    df_analise['Gols_por_90_min'] = (df_analise['Gols'] / df_analise['Minutos']) * 90
-    
-    melhores = df_analise.sort_values(by='Gols_por_90_min', ascending=False).head(5)
+    df_analise["Gols_por_90_min"] = (
+        df_analise["Gols"].fillna(0) / df_analise["Minutos"] * 90
+    )
+    melhores = (
+        df_analise.sort_values(by="Gols_por_90_min", ascending=False)
+        .head(5)
+        .copy()
+    )
 
-    if melhores.empty or melhores['Gols'].sum() == 0:
+    if melhores["Gols"].fillna(0).sum() == 0:
         print("Nenhum gol registrado para gerar gráfico.")
-        print(melhores[['Jogador', 'Gols', 'Minutos']])
-    else:
-        print(melhores[['Jogador', 'Gols', 'Minutos', 'Gols_por_90_min']])
-        
-        plt.figure(figsize=(10, 6))
-        sns.barplot(x='Gols_por_90_min', y='Jogador', data=melhores, hue='Jogador', palette='Reds_r', legend=False)
-        plt.title('Top 5 Finalizadores (Gols por 90 min)', fontsize=16)
-        plt.xlabel('Gols a cada 90 minutos')
-        plt.ylabel('Jogador')
-        plt.tight_layout()
+        _imprimir_tabela(melhores, ["Jogador", "Gols", "Minutos"])
+        return melhores
+
+    _imprimir_tabela(
+        melhores,
+        ["Jogador", "Gols", "Minutos", "Gols_por_90_min"],
+    )
+
+    if mostrar_grafico:
+        figura, eixo = plt.subplots(figsize=(10, 6))
+        sns.barplot(
+            x="Gols_por_90_min",
+            y="Jogador",
+            data=melhores,
+            hue="Jogador",
+            palette="Reds_r",
+            legend=False,
+            ax=eixo,
+        )
+        eixo.set_title("Top 5 Finalizadores (Gols por 90 min)", fontsize=16)
+        eixo.set_xlabel("Gols a cada 90 minutos")
+        eixo.set_ylabel("Jogador")
+        figura.tight_layout()
         plt.show()
 
-def analisar_garcons(df):
+    return melhores
+
+
+def analisar_garcons(
+    df: pd.DataFrame, mostrar_grafico: bool = True
+) -> pd.DataFrame:
+    """Retorna os cinco maiores índices de assistências por 90 minutos."""
     print("\n--- Análise: Top 5 Garçons (Assistências) ---")
-    
-    if 'Assistencias' not in df.columns:
-        print("Erro: Coluna 'Assistencias' não encontrada.")
-        return
 
-    df_analise = df[df['Minutos'] > 0].copy()
-    
+    colunas_obrigatorias = ["Jogador", "Minutos", "Assistencias"]
+    if not _validar_colunas(df, colunas_obrigatorias):
+        return pd.DataFrame()
+
+    df_analise = _normalizar_numeros(df, ["Minutos", "Assistencias"])
+    df_analise = df_analise[df_analise["Minutos"] > 0].copy()
+
     if df_analise.empty:
-        print("Aviso: Nenhum jogador com minutos jogados.")
-        return
+        print("Aviso: nenhum jogador com minutos jogados encontrado.")
+        return df_analise
 
-    df_analise['Ast_por_90_min'] = (df_analise['Assistencias'] / df_analise['Minutos']) * 90
-    melhores = df_analise.sort_values(by='Ast_por_90_min', ascending=False).head(5)
+    df_analise["Ast_por_90_min"] = (
+        df_analise["Assistencias"].fillna(0) / df_analise["Minutos"] * 90
+    )
+    melhores = (
+        df_analise.sort_values(by="Ast_por_90_min", ascending=False)
+        .head(5)
+        .copy()
+    )
 
-    if melhores.empty or melhores['Assistencias'].sum() == 0:
+    if melhores["Assistencias"].fillna(0).sum() == 0:
         print("Nenhuma assistência registrada para gerar gráfico.")
-        print(melhores[['Jogador', 'Assistencias', 'Minutos']])
-    else:
-        print(melhores[['Jogador', 'Assistencias', 'Minutos', 'Ast_por_90_min']])
+        _imprimir_tabela(melhores, ["Jogador", "Assistencias", "Minutos"])
+        return melhores
 
-        plt.figure(figsize=(10, 6))
-        sns.barplot(x='Ast_por_90_min', y='Jogador', data=melhores, hue='Jogador', palette='Blues_r', legend=False)
-        plt.title('Top 5 Garçons (Assistências por 90 min)', fontsize=16)
-        plt.xlabel('Assistências a cada 90 minutos')
-        plt.ylabel('Jogador')
-        plt.tight_layout()
+    _imprimir_tabela(
+        melhores,
+        ["Jogador", "Assistencias", "Minutos", "Ast_por_90_min"],
+    )
+
+    if mostrar_grafico:
+        figura, eixo = plt.subplots(figsize=(10, 6))
+        sns.barplot(
+            x="Ast_por_90_min",
+            y="Jogador",
+            data=melhores,
+            hue="Jogador",
+            palette="Blues_r",
+            legend=False,
+            ax=eixo,
+        )
+        eixo.set_title("Top 5 Garçons (Assistências por 90 min)", fontsize=16)
+        eixo.set_xlabel("Assistências a cada 90 minutos")
+        eixo.set_ylabel("Jogador")
+        figura.tight_layout()
         plt.show()
 
-def analisar_disciplina(df):
+    return melhores
+
+
+def analisar_disciplina(
+    df: pd.DataFrame, mostrar_grafico: bool = True
+) -> pd.DataFrame:
+    """Retorna até dez jogadores com cartões registrados."""
     print("\n--- Análise: Disciplina (Cartões) ---")
 
-    if 'Cartoes_Amarelos' not in df.columns:
-        print("⚠️  Aviso: As colunas de Cartões não foram encontradas no arquivo.")
-        return
+    colunas_obrigatorias = ["Jogador", "Cartoes_Amarelos"]
+    if not _validar_colunas(df, colunas_obrigatorias):
+        return pd.DataFrame()
 
-    df_analise = df.copy()
-    
-    if 'Cartoes_Vermelhos' in df_analise.columns:
-        df_analise['Total_Cartoes'] = df_analise['Cartoes_Amarelos'] + df_analise['Cartoes_Vermelhos']
+    colunas_numericas = ["Cartoes_Amarelos"]
+    if "Cartoes_Vermelhos" in df.columns:
+        colunas_numericas.append("Cartoes_Vermelhos")
+
+    df_analise = _normalizar_numeros(df, colunas_numericas)
+    amarelos = df_analise["Cartoes_Amarelos"].fillna(0)
+    if "Cartoes_Vermelhos" in df_analise.columns:
+        vermelhos = df_analise["Cartoes_Vermelhos"].fillna(0)
+        df_analise["Total_Cartoes"] = amarelos + vermelhos
     else:
-        df_analise['Total_Cartoes'] = df_analise['Cartoes_Amarelos']
-    
-    mais_indisciplinados = df_analise.sort_values(by='Total_Cartoes', ascending=False).head(10)
-    
-    mais_indisciplinados = mais_indisciplinados[mais_indisciplinados['Total_Cartoes'] > 0]
+        df_analise["Total_Cartoes"] = amarelos
+
+    mais_indisciplinados = (
+        df_analise[df_analise["Total_Cartoes"] > 0]
+        .sort_values(by="Total_Cartoes", ascending=False)
+        .head(10)
+        .copy()
+    )
 
     if mais_indisciplinados.empty:
         print("Nenhum cartão registrado ainda.")
-        return
+        return mais_indisciplinados
 
     print("Jogadores com mais cartões:")
-    cols_to_show = ['Jogador', 'Cartoes_Amarelos', 'Total_Cartoes']
-    if 'Cartoes_Vermelhos' in df.columns:
-        cols_to_show.insert(2, 'Cartoes_Vermelhos')
-        
-    print(mais_indisciplinados[cols_to_show])
+    colunas_exibidas = ["Jogador", "Cartoes_Amarelos", "Total_Cartoes"]
+    if "Cartoes_Vermelhos" in df_analise.columns:
+        colunas_exibidas.insert(2, "Cartoes_Vermelhos")
+    _imprimir_tabela(mais_indisciplinados, colunas_exibidas)
 
-    plt.figure(figsize=(10, 8))
-    sns.barplot(x='Total_Cartoes', y='Jogador', data=mais_indisciplinados, hue='Jogador', palette='Oranges_r', legend=False)
-    plt.title('Jogadores com Mais Cartões', fontsize=16)
-    plt.xlabel('Total de Cartões')
-    plt.ylabel('Jogador')
-    plt.tight_layout()
-    plt.show()
+    if mostrar_grafico:
+        figura, eixo = plt.subplots(figsize=(10, 8))
+        sns.barplot(
+            x="Total_Cartoes",
+            y="Jogador",
+            data=mais_indisciplinados,
+            hue="Jogador",
+            palette="Oranges_r",
+            legend=False,
+            ax=eixo,
+        )
+        eixo.set_title("Jogadores com Mais Cartões", fontsize=16)
+        eixo.set_xlabel("Total de Cartões")
+        eixo.set_ylabel("Jogador")
+        figura.tight_layout()
+        plt.show()
+
+    return mais_indisciplinados

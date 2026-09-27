@@ -1,2 +1,41 @@
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+ENV/
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# Variaveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporarios
+*.tmp
+*.temp
+*.bak
+~$*
+
+# Saidas geradas: preserve o CSV principal
+output/*
+!output/dados_spfc_processados.csv
+
+# Nome legado de saida
 dados_spfc.csv
